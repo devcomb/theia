@@ -123,6 +123,8 @@ is not optimized for dense, information rich UIs.
   --theia-warn-color1: var(--md-amber-500);
   --theia-warn-color2: var(--md-amber-400);
   --theia-warn-color3: var(--md-amber-300);
+  
+  --theia-warn-font-color0: var(--md-grey-900);
 
   --theia-error-color0: var(--md-red-700);
   --theia-error-color1: var(--md-red-500);
