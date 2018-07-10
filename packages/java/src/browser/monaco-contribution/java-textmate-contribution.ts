@@ -15,41 +15,42 @@
  ********************************************************************************/
 
 import { injectable } from 'inversify';
-import { JAVA_LANGUAGE_ID } from '../../common';
+// import { JAVA_LANGUAGE_ID } from '../../common';
 import { LanguageGrammarDefinitionContribution, TextmateRegistry } from '@theia/monaco/lib/browser/textmate';
 
 @injectable()
 export class JavaTextmateContribution implements LanguageGrammarDefinitionContribution {
 
+    // TODO: restore this!
     registerTextmateLanguage(registry: TextmateRegistry) {
-        registry.registerTextMateGrammarScope('text.html.basic', {
-            async getGrammarDefinition() {
-                return {
-                    format: 'json',
-                    content: '{}'
-                };
-            }
-        });
-        const javaDocGrammar = require('../../../data/javadoc.tmlanguage.json');
-        registry.registerTextMateGrammarScope('text.html.javadoc', {
-            async getGrammarDefinition() {
-                return {
-                    format: 'json',
-                    content: javaDocGrammar
-                };
-            }
-        });
-        const scope = 'source.java';
-        const javaGrammar = require('../../../data/java.tmlanguage.json');
-        registry.registerTextMateGrammarScope(scope, {
-            async getGrammarDefinition() {
-                return {
-                    format: 'json',
-                    content: javaGrammar
-                };
-            }
-        });
+        // registry.registerTextMateGrammarScope('text.html.basic', {
+        //     async getGrammarDefinition() {
+        //         return {
+        //             format: 'json',
+        //             content: '{}'
+        //         };
+        //     }
+        // });
+        // const javaDocGrammar = require('../../../data/javadoc.tmlanguage.json');
+        // registry.registerTextMateGrammarScope('text.html.javadoc', {
+        //     async getGrammarDefinition() {
+        //         return {
+        //             format: 'json',
+        //             content: javaDocGrammar
+        //         };
+        //     }
+        // });
+        // const scope = 'source.java';
+        // const javaGrammar = require('../../../data/java.tmlanguage.json');
+        // registry.registerTextMateGrammarScope(scope, {
+        //     async getGrammarDefinition() {
+        //         return {
+        //             format: 'json',
+        //             content: javaGrammar
+        //         };
+        //     }
+        // });
 
-        registry.mapLanguageIdToTextmateGrammar(JAVA_LANGUAGE_ID, scope);
+        // registry.mapLanguageIdToTextmateGrammar(JAVA_LANGUAGE_ID, scope);
     }
 }

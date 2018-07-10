@@ -33,10 +33,30 @@ export interface ActionableMessage {
     commands?: Command[];
 }
 
+export interface SemanticHighlightingParams {
+    readonly uri: string;
+    readonly lines: SemanticHighlightingInformation[];
+}
+
+export interface SemanticHighlightingInformation {
+    readonly line: number;
+    readonly tokens: SemanticHighlightingToken[];
+}
+
+export interface SemanticHighlightingToken {
+    readonly character: number;
+    readonly length: number;
+    readonly scopes: string[];
+}
+
 export namespace ClassFileContentsRequest {
     export const type = new RequestType<TextDocumentIdentifier, string | undefined, void, void>('java/classFileContents');
 }
 
 export namespace ActionableNotification {
     export const type = new NotificationType<ActionableMessage, void>('language/actionableNotification');
+}
+
+export namespace SemanticHighlight {
+    export const type = new NotificationType<SemanticHighlightingParams, void>('textDocument/semanticHighlighting');
 }

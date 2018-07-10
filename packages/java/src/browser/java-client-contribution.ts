@@ -19,9 +19,19 @@ import { CommandService } from "@theia/core/lib/common";
 import {
     Window, ILanguageClient, BaseLanguageClientContribution, Workspace, Languages, LanguageClientFactory, LanguageClientOptions
 } from '@theia/languages/lib/browser';
+import URI from '@theia/core/lib/common/uri';
+import { SemanticHighlightingService, SemanticHighlightingRange, Position } from "@theia/editor/lib/browser/semantic-highlight/semantic-highlighting-service";
 import { JAVA_LANGUAGE_ID, JAVA_LANGUAGE_NAME } from '../common';
-import { ActionableNotification, ActionableMessage, StatusReport, StatusNotification } from "./java-protocol";
 import { StatusBar, StatusBarEntry, StatusBarAlignment } from "@theia/core/lib/browser";
+import {
+    ActionableNotification,
+    ActionableMessage,
+    StatusReport,
+    StatusNotification,
+    SemanticHighlight,
+    SemanticHighlightingParams,
+    SemanticHighlightingToken
+} from "./java-protocol";
 
 @injectable()
 export class JavaClientContribution extends BaseLanguageClientContribution {
@@ -37,7 +47,8 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         @inject(LanguageClientFactory) protected readonly languageClientFactory: LanguageClientFactory,
         @inject(Window) protected readonly window: Window,
         @inject(CommandService) protected readonly commandService: CommandService,
-        @inject(StatusBar) protected readonly statusBar: StatusBar
+        @inject(StatusBar) protected readonly statusBar: StatusBar,
+        @inject(SemanticHighlightingService) protected readonly semanticHighlightingService: SemanticHighlightingService
     ) {
         super(workspace, languages, languageClientFactory);
     }
@@ -53,6 +64,7 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
     protected onReady(languageClient: ILanguageClient): void {
         languageClient.onNotification(ActionableNotification.type, this.showActionableMessage.bind(this));
         languageClient.onNotification(StatusNotification.type, this.showStatusMessage.bind(this));
+        languageClient.onNotification(SemanticHighlight.type, this.applySemanticHighlighting.bind(this));
         super.onReady(languageClient);
     }
 
@@ -73,6 +85,20 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         }, 5000);
     }
 
+    protected applySemanticHighlighting(params: SemanticHighlightingParams): void {
+        const toRanges: (tuple: [number, SemanticHighlightingToken[]]) => SemanticHighlightingRange[] = tuple => {
+            const [line, tokens] = tuple;
+            return tokens.map(token => ({
+                start: Position.create(line, token.character),
+                end: Position.create(line, token.character + token.length),
+                scopes: token.scopes
+            }));
+        };
+        const ranges = params.lines.map(line => [line.line, line.tokens]).map(toRanges).reduce((acc, current) => acc.concat(current), []);
+        const uri = new URI(params.uri);
+        this.semanticHighlightingService.decorate(uri, ranges);
+    }
+
     protected showActionableMessage(message: ActionableMessage): void {
         const items = message.commands || [];
         this.window.showMessage(message.severity, message.message, ...items).then(command => {
@@ -87,7 +113,8 @@ export class JavaClientContribution extends BaseLanguageClientContribution {
         const options = super.createOptions();
         options.initializationOptions = {
             extendedClientCapabilities: {
-                classFileContentsSupport: true
+                classFileContentsSupport: true,
+                semanticHighlighting: true
             }
         };
         return options;
