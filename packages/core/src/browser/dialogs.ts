@@ -143,8 +143,11 @@ export abstract class AbstractDialog<T> extends BaseWidget {
             this.resolve = resolve;
             this.reject = reject;
             this.toDisposeOnDetach.push(Disposable.create(() => {
-                this.resolve = undefined;
                 this.reject = undefined;
+                if (this.resolve) {
+                    resolve(undefined);
+                    this.resolve = undefined;
+                }
             }));
             Widget.attach(this, document.body);
             this.activate();
@@ -168,12 +171,14 @@ export abstract class AbstractDialog<T> extends BaseWidget {
                 this.setErrorMessage(error);
             } else {
                 this.resolve(value);
+                this.resolve = undefined;
                 Widget.detach(this);
             }
         }
     }
 
     abstract get value(): T;
+
     isValid(value: T): string {
         return '';
     }

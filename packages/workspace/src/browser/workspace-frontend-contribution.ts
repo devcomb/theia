@@ -67,8 +67,15 @@ export class WorkspaceFrontendContribution implements CommandContribution, MenuC
                     const rootNode = DirNode.createRoot(parentStat, name, label);
                     const dialog = this.fileDialogFactory({ title: WorkspaceCommands.OPEN.label! });
                     dialog.model.navigateTo(rootNode);
-                    const node = await dialog.open();
-                    this.openFile(node);
+                    const result = await dialog.open();
+                    if (result instanceof Array) {
+                        const results: Readonly<FileStatNode>[] = result;
+                        for (let i = 0; i < results.length; i++) {
+                            this.openFile(results[i]);
+                        }
+                    } else {
+                        this.openFile(result);
+                    }
                 }
             }
         });
