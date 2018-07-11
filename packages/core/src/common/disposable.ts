@@ -65,8 +65,8 @@ export class DisposableCollection implements Disposable {
 
     push(disposable: Disposable): Disposable {
         const disposables = this.disposables;
-        disposables.push(disposable);
         const originalDispose = disposable.dispose.bind(disposable);
+        disposables.push(Disposable.create(originalDispose));
         const toRemove = Disposable.create(() => {
             const index = disposables.indexOf(disposable);
             if (index !== -1) {
