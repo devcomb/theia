@@ -16,6 +16,7 @@
 
 import { inject, injectable } from 'inversify';
 import { ILogger } from '../common/logger';
+import { MessageService } from '../common/message-service';
 
 export const StorageService = Symbol('IStorageService');
 /**
@@ -43,9 +44,12 @@ interface LocalStorage {
 @injectable()
 export class LocalStorageService implements StorageService {
     private storage: LocalStorage;
+    private fullstorage: boolean = false;
 
     constructor(
-        @inject(ILogger) protected logger: ILogger
+        @inject(ILogger) protected logger: ILogger,
+        @inject(MessageService) protected readonly messageService: MessageService,
+
     ) {
         if (typeof window !== 'undefined' && window.localStorage) {
             this.storage = window.localStorage;
@@ -57,7 +61,17 @@ export class LocalStorageService implements StorageService {
 
     setData<T>(key: string, data?: T): Promise<void> {
         if (data !== undefined) {
-            this.storage[this.prefix(key)] = JSON.stringify(data);
+            try {
+                if (!this.isLocalStorageFull()) {
+                    this.storage[this.prefix(key)] = JSON.stringify(data);
+                }
+            } catch (e) {
+                if (this.messageService) {
+                    this.fullstorage = true;
+                    const currentSize = this.verifyLocalStorage();
+                    this.messageService.warn(`Web storage quota: \n  ${e} \n current size: ${currentSize} bytes`);
+                }
+            }
         } else {
             delete this.storage[this.prefix(key)];
         }
@@ -75,5 +89,19 @@ export class LocalStorageService implements StorageService {
     protected prefix(key: string): string {
         const pathname = typeof window === 'undefined' ? '' : window.location.pathname;
         return `theia:${pathname}:${key}`;
+    }
+
+    protected verifyLocalStorage(): string {
+
+        let totalLength = 0;
+        for (let count = 0; count < this.storage.length; count++) {
+            const key = this.storage.key(count);
+            totalLength += this.storage[key].length;
+        }
+        return totalLength.toString();
+    }
+
+    private isLocalStorageFull(): boolean {
+        return this.fullstorage;
     }
 }
